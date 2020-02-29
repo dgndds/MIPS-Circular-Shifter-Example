@@ -6,7 +6,7 @@ main:
 	### Jump to the subprogram ###
 	li $a0, 0xAA0000BB 
 	li $a1, 8
-	jal shiftLeftCircular
+	jal shiftRightCircular
 	
 	### Get Result and Print ###
 	add $a0,$zero,$v0
@@ -34,4 +34,20 @@ shiftLeft:
 	move $v0, $s0
 	jr $ra
 
+shiftRightCircular:
+	### Get input and save it to a register ###
+	add $s0,$zero,$a0
+shiftRight:
+	### Shift input ###
+	srl $s2, $s0, 4 
+ 	sll $s3, $s0, 28 
+ 	or $s0, $s2, $s3 
+	
+	### Count the number of shifts ###
+	addi $s1,$s1,4
+	
+	### Jump back to main if shifted desired amount ###
+	blt $s1,$a1,shiftRight
+	move $v0, $s0
+	jr $ra
 	.data
