@@ -1,8 +1,4 @@
 	.text
-	# s0 ---- Maximum size of the array
-	# s1 ---- Size of the array
-	# s2 ---- index for the array
-	# s3 ---- counter
 main:
 	lw $s0, Size
 	
@@ -78,16 +74,34 @@ readValues:
 	
 arrayOperations:
 	### Push register address to the stack ###
-	addi $sp, $sp, -4
+	addi $sp, $sp, -8
 	sw $ra, 0($sp)
+	sw $s0, 4($sp)
 	
 	jal min
 	jal max
 	jal sum
+	jal palindrome
+	
+	add $s0, $zero, $v0
+	
+	### Print Result ###
+	li $v0, 4
+	la $a0, palMsg
+	syscall
+	
+	li $v0, 4
+	la $a0, newLine
+	syscall
+	
+	li $v0,1
+	add $a0, $zero, $s0
+	syscall
 	
 	### Puop register address from the stack ###
 	lw $ra, 0($sp)
-	addi $sp, $sp, 4
+	lw $s0, 4($sp)
+	addi $sp, $sp, 8
 	
 	### return ###
 	jr $ra
@@ -127,6 +141,10 @@ returnNewMin:
 	### Print Result ###
 	li $v0, 4
 	la $a0, minMsg
+	syscall
+	
+	li $v0, 4
+	la $a0, newLine
 	syscall
 	
 	li $v0,1
@@ -190,6 +208,10 @@ returnNewMax:
 	la $a0, maxMsg
 	syscall
 	
+	li $v0, 4
+	la $a0, newLine
+	syscall
+	
 	li $v0,1
 	add $a0, $zero, $s2
 	syscall
@@ -251,6 +273,10 @@ findSum:
 	la $a0, sumMsg
 	syscall
 	
+	li $v0, 4
+	la $a0, newLine
+	syscall
+	
 	li $v0,1
 	add $a0, $zero, $s2
 	syscall
@@ -268,12 +294,93 @@ findSum:
 	### Return ###
 	jr $ra
 	
+palindrome:
+	### Allocate stack memory ### 
+	addi $sp,$sp, -36
+	sw $s0, 0($sp) # address of array
+	sw $s1, 4($sp) # size of array
+	sw $s2, 8($sp) # Array Element
+	sw $s3, 12($sp) #Array Element 2
+	sw $s4, 16($sp) # counter
+	sw $s5, 20($sp) # address of the end
+	sw $s6, 24($sp) # counter2
+	sw $a0, 28($sp) # parameter 1
+	sw $a1, 32($sp) # parameter 2
+	
+	### Initialse values ###
+	add $s0, $zero, $a0
+	add $s1, $zero, $a1
+	add $s6, $zero, $s1
+	
+find_palindrome:
+	### Find end of the array ###
+	mul $s5,$s1,4
+	sub $s5,$s5,4
+	add $s5, $s0, $s5
+	
+isPalindrome:
+	### Load end and beginning of the array ###
+	lw $s2,0($s5)
+	lw $s3,0($s0)
+	
+	### Compare the datas from indexes ###
+	bne $s2,$s3,returnFalse
+	
+	### Increment and decrement counters ###
+	add $s4,$s4,1
+	add $s6,$s6,-1
+	
+	### Check if done ###
+	bge $s4,$s6, returnTrue
+	
+	### Increment and decrement indexes ###
+	add $s0,$s0,4
+	add $s5,$s5,-4
+	
+	### Loop back ###
+	j isPalindrome
+	
+returnFalse:
+	### Deallocate stack ###
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $s5, 20($sp)
+	lw $s6, 24($sp)
+	lw $a0, 28($sp)
+	lw $a1, 32($sp)
+	addi $sp, $sp, 36
+	
+	### Return and Jump back ###
+	addi $v0, $zero, 0
+	jr $ra
+
+returnTrue:
+	### Deallocate stack ###
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $s5, 20($sp)
+	lw $s6, 24($sp)
+	lw $a0, 28($sp)
+	lw $a1, 32($sp)
+	addi $sp, $sp, 36
+	
+	### Return and Jump back ###
+	addi $v0, $zero, 1
+	jr $ra
 
 	.data
 array: .space 80
 Size: .word 20
 askMsg: .asciiz "Size of array: "
 msg: .asciiz " Enter numbers to be stored in the array: \n"
-minMsg: .asciiz "Min of the array: "
-maxMsg: .asciiz "Max of the array: "
-sumMsg: .asciiz "Sum of the array: "
+minMsg: .asciiz "\n Min of the array: "
+maxMsg: .asciiz " \n Max of the array: "
+sumMsg: .asciiz " \n Sum of the array: "
+palMsg: .asciiz	" \n Palindrome? : "
+newLine: .asciiz "\n"
