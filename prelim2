@@ -1,0 +1,279 @@
+	.text
+	# s0 ---- Maximum size of the array
+	# s1 ---- Size of the array
+	# s2 ---- index for the array
+	# s3 ---- counter
+main:
+	lw $s0, Size
+	
+	jal createArray
+	
+	### Pass array address and size ###
+	add $a0, $zero, $v0
+	move $a1, $v1
+	
+	jal arrayOperations
+	
+	### End of the program ###
+	li $v0,10
+	syscall
+createArray:
+	### Make space in stack and save registers ###
+	addi $sp,$sp,-16
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+readSize:
+	### Ask for size of the array ###
+	li $v0, 4
+	la $a0, askMsg
+	syscall
+	
+	### Read the value ###
+	li $v0,5
+	syscall
+	
+	### Save value to the register ###
+	add $s1, $zero, $v0
+	
+	### Branch according to input
+	bgt $v0,$s0,readSize
+	blt $v0,$s0,readValues
+	
+readValues:
+
+	### Ask for the value ###
+	li $v0, 4
+	la $a0, msg
+	syscall
+	
+	### Read the value from user ###
+	li $v0,5
+	syscall
+	
+	### Save it to the array ###
+	sw $v0, array($s2)
+	addi $s2,$s2,4
+	
+	### Increment counter ###
+	addi $s3,$s3,1
+	
+	### Read until size ###
+	blt $s3,$s1,readValues
+	
+	### Return adress and size of the array ###
+	la $v0, array
+	move $v1, $s1
+	
+	### Deallocate the stack space ###
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	addi $sp,$sp,16
+	
+	### Return ###
+	jr $ra
+	
+arrayOperations:
+	### Push register address to the stack ###
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	
+	jal min
+	jal max
+	jal sum
+	
+	### Puop register address from the stack ###
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	
+	### return ###
+	jr $ra
+	
+min:	
+	### Allocate stack memory ### 
+	addi $sp,$sp, -28
+	sw $s0, 0($sp) # address of array
+	sw $s1, 4($sp) # size of array
+	sw $s2, 8($sp) # result
+	sw $s3, 12($sp) #Array element
+	sw $s4, 16($sp) # counter
+	sw $a0, 20($sp) # parameter 1
+	sw $a1, 24($sp) # parameter 2
+	
+	### Initialse values ###
+	add $s0, $zero, $a0
+	add $s1, $zero, $a1
+	addi $s2, $zero, 0
+	lw $s2, 0($s0)
+
+findMin:
+	### Get data from the array ###
+	lw $s3, 0($s0)
+	
+	### Increment counter and index ###
+	addi $s0,$s0,4
+	addi $s4,$s4,1
+	
+	### Assing new min value ###
+	ble $s3,$s2,newMin
+	
+returnNewMin:
+	### Iterate throguh array ###	
+	blt $s4,$s1,findMin
+	
+	### Print Result ###
+	li $v0, 4
+	la $a0, minMsg
+	syscall
+	
+	li $v0,1
+	add $a0, $zero, $s2
+	syscall
+	
+	### Deallocate stack ###
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $a0, 20($sp)
+	lw $a1, 24($sp)
+	addi $sp, $sp, 28
+	
+	### Return ###
+	jr $ra
+	
+newMin:	
+	### Assing new result ###
+	move $s2,$s3
+	
+	### return to function ###
+	j returnNewMin
+
+max:
+	### Allocate stack memory ### 
+	addi $sp,$sp, -28
+	sw $s0, 0($sp) # address of array
+	sw $s1, 4($sp) # size of array
+	sw $s2, 8($sp) # result
+	sw $s3, 12($sp) #Array element
+	sw $s4, 16($sp) # counter
+	sw $a0, 20($sp) # parameter 1
+	sw $a1, 24($sp) # parameter 2
+	
+	### Initialse values ###
+	add $s0, $zero, $a0
+	add $s1, $zero, $a1
+	addi $s2, $zero, 0
+	lw $s2, 0($s0)
+
+findMax:
+	### Get data from the array ###
+	lw $s3, 0($s0)
+	
+	### Increment counter and index ###
+	addi $s0,$s0,4
+	addi $s4,$s4,1
+	
+	### Assing new min value ###
+	bge $s3,$s2,newMax
+	
+returnNewMax:
+	### Iterate throguh array ###	
+	blt $s4,$s1,findMax
+	
+	### Print Result ###
+	li $v0, 4
+	la $a0, maxMsg
+	syscall
+	
+	li $v0,1
+	add $a0, $zero, $s2
+	syscall
+	
+	### Deallocate stack ###
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $a0, 20($sp)
+	lw $a1, 24($sp)
+	addi $sp, $sp, 28
+	
+	### Return ###
+	jr $ra
+	
+newMax:	
+	### Assing new result ###
+	move $s2,$s3
+	
+	### return to function ###
+	j returnNewMax	
+	
+sum:
+	### Allocate stack memory ### 
+	addi $sp,$sp, -28
+	sw $s0, 0($sp) # address of array
+	sw $s1, 4($sp) # size of array
+	sw $s2, 8($sp) # result
+	sw $s3, 12($sp) #Array element
+	sw $s4, 16($sp) # counter
+	sw $a0, 20($sp) # parameter 1
+	sw $a1, 24($sp) # parameter 2
+	
+	### Initialse values ###
+	add $s0, $zero, $a0
+	add $s1, $zero, $a1
+	addi $s2, $zero, 0
+	
+findSum:
+	### Load data from the array ###
+	lw $s3, 0($s0)
+	
+	### Get data from the array ###
+	lw $s3, 0($s0)
+	
+	### Increment counter and index ###
+	addi $s0,$s0,4
+	addi $s4,$s4,1
+	
+	### Add to the result ###
+	add $s2,$s2,$s3
+	
+	blt $s4,$s1,findSum
+	
+	### Print Result ###
+	li $v0, 4
+	la $a0, sumMsg
+	syscall
+	
+	li $v0,1
+	add $a0, $zero, $s2
+	syscall
+	
+	### Deallocate stack ###
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $a0, 20($sp)
+	lw $a1, 24($sp)
+	addi $sp, $sp, 28
+	
+	### Return ###
+	jr $ra
+	
+
+	.data
+array: .space 80
+Size: .word 20
+askMsg: .asciiz "Size of array: "
+msg: .asciiz " Enter numbers to be stored in the array: \n"
+minMsg: .asciiz "Min of the array: "
+maxMsg: .asciiz "Max of the array: "
+sumMsg: .asciiz "Sum of the array: "
