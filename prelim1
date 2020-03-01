@@ -24,8 +24,11 @@ main:
 	### Move inputs to parameters ###
 	move $a0, $s4
 	move $a1, $s5
-	jal shiftRightCircular
 	
+	blez $a1, shiftLeftCircular
+	jal shiftRightCircular
+
+done:	
 	### Get Result and Print ###
 	add $a0,$zero,$v0
 	li $v0, 34
@@ -34,10 +37,23 @@ main:
 	### End the Program ###
 	li $v0, 10
 	syscall
-
+	
 shiftLeftCircular:
-	### Get input and save it to a register ###
+	### Make space in stack and save registers ###
+	addi $sp,$sp,-20
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	
+	### Get input and save it to a register as absolute value###
 	add $s0,$zero,$a0
+	add $s4,$zero,$a1
+	
+	### Take absolute velue of shift amount ###
+	abs $s4, $s4
+	
 shiftLeft:
 	### Shift input ###
 	sll $s2, $s0, 4 
@@ -48,13 +64,26 @@ shiftLeft:
 	addi $s1,$s1,4
 	
 	### Jump back to main if shifted desired amount ###
-	blt $s1,$a1,shiftLeft
+	blt $s1,$s4,shiftLeft
 	move $v0, $s0
-	jr $ra
+	
+	### Deallocate the stack space ###
+	addi $sp,$sp,20
+	
+	### Return ###
+	j done
 
 shiftRightCircular:
 	### Get input and save it to a register ###
 	add $s0,$zero,$a0
+	
+	### Make space in stack and save registers ###
+	addi $sp,$sp,-16
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	
 shiftRight:
 	### Shift input ###
 	srl $s2, $s0, 4 
@@ -67,8 +96,13 @@ shiftRight:
 	### Jump back to main if shifted desired amount ###
 	blt $s1,$a1,shiftRight
 	move $v0, $s0
+	
+	### Deallocate the stack space ###
+	addi $sp,$sp,16
+	
+	### Return ###
 	jr $ra
 	
 	.data
 askValue: .asciiz "Please enter a decimal number to be shiftted: \n"
-askShiftAmount: .asciiz "Please enter the shift amountr: \n"
+askShiftAmount: .asciiz "Please enter the shift amount (Negative shifts left): \n"
